@@ -2,6 +2,12 @@
     margin: 50px auto;
 }
 
+.container:after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
 .sticker {
     float: left;
     width: 50px;
@@ -62,4 +68,14 @@
     border-radius: 5px;
     padding: 4px;
     line-height: 35px;
+}
+
+
+
+footer {
+    margin-top: 50px;
+}
+
+footer .reset-album {
+    float: right;
 }

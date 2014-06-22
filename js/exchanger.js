@@ -7,11 +7,31 @@ Xchanger.stickersFields = {
     position: 'p'
 };
 
+Xchanger.albums = {
+    default: 'stickerXchanger'
+}
+
 Xchanger.dictionary = {
     phrasses: {
         'failed_to_store_to_local_storage': {
             eng: 'Failed to store current sticker\'s set to device, please try with restart of software or device, there\'s a possibility that this problem may dissapear that way. Thank you!', 
             srb: 'Скуп сличица није успешно сачуван на уређају, молимо Вас да поново покушате да покренете програм или сам уређај, постоји могућност да ће на такав начин овај проблем бити елиминисан. Хвала!'
+        },
+        'failed_to_get_from_local_storage': {
+            eng: 'Failed to get current sticker\'s set from device, please try with restart of software or device, there\'s a possibility that this problem may dissapear that way. Thank you!', 
+            srb: 'Скуп сличица није успешно преузет са уређаја, молимо Вас да поново покушате да покренете програм или сам уређај, постоји могућност да ће на такав начин овај проблем бити елиминисан. Хвала!'
+        },
+        'failed_to_delete_item_from_local_storage': {
+            eng: 'Failed to reset current Album on this device, please try with restart of software or device, there\'s a possibility that this problem may dissapear that way. Thank you!', 
+            srb: 'Поништавања албума није успело на овом уређају, молимо Вас да поново покушате да покренете програм или сам уређај, постоји могућност да ће на такав начин овај проблем бити елиминисан. Хвала!'
+        },
+        'reset_album': {
+            eng: 'Reset album', 
+            srb: 'Поништи албум'
+        },
+        'reset_album_are_you_sure': {
+            eng: 'Are you sure you want to reset this album (this operation can\'t be undone)?', 
+            srb: 'Да ли сте сигурни да желите да бесповратно поништите тренутни албум?'
         }
     },
     words: {
@@ -36,6 +56,21 @@ Xchanger.dictionary = {
 
 Xchanger.language = 'srb';
 
+
+var resetAlbum = function(key) {
+    if (confirm(Xchanger.dictionary.phrasses.reset_album_are_you_sure[Xchanger.language])) {
+        try {
+            window.localStorage.setItem(key, '');
+            window.localStorage.removeItem(key);
+        }
+        catch(e) {
+            console.log('Failed to delete item from localStorage with the following error message:', e.message);
+            
+            alert(Xchanger.dictionary.phrasses.failed_to_delete_item_from_local_storage[Xchanger.language]);
+        }        
+    }
+};
+
 var storeStickers = function(stickers, key) {
     try {
         window.localStorage.setItem(key, JSON.stringify(stickers));
@@ -47,23 +82,34 @@ var storeStickers = function(stickers, key) {
     }
 };
 
-var getStoredStickers = function(key) {key
+var getStoredStickers = function(key) {
+    var storedStickers = null;
+
+    try {
+        var storedStickers = window.localStorage.getItem(key);
+
+        if (storedStickers) {
+            storedStickers = JSON.parse(storedStickers);
+        }
+    }
+    catch(e) {
+        console.log('Failed to get stored stickers from localStorage with the following error message:', e.message);
+        
+        alert(Xchanger.dictionary.phrasses.failed_to_get_from_local_storage[Xchanger.language]);
+    }
     
+    return storedStickers;
 };
 
 
 var generateStickers = function() {
     Xchanger.stickers = Xchanger.sticker || [];
 
-    // first check if there are already stickers stored:
-    var storedStickers = window.localStorage.getItem('stickerXchanger');
+    // first check if there are already stickers stored for current album:
+    var storedStickers = getStoredStickers(Xchanger.albums.default);
 
     if (storedStickers) {
-        storedStickers = JSON.parse(storedStickers);
-
-        if (storedStickers) {
-            Xchanger.stickers = storedStickers;
-        }
+        Xchanger.stickers = storedStickers;
     }
     else {
 
@@ -157,7 +203,7 @@ $('.sticker').on('click', function(){
             }
             
             // update storage with the most recent data:
-            storeStickers(Xchanger.stickers, 'stickerXchanger');
+            storeStickers(Xchanger.stickers, Xchanger.albums.default);
 
             // ... then check current sticker's state (count), after previous action:
             // add/remove appropriate classes:
@@ -184,6 +230,13 @@ $('.sticker').on('click', function(){
             $(this).parent().remove();
         });
 
+
+        // but make it dissapear in a two seconds (only if it's visible):
+        setTimeout(function(){
+            if (actionItem.find('.sticker-action .sticker-action-item.sticker-do-nothing:visible').length) {
+                actionItem.find('.sticker-action .sticker-action-item.sticker-do-nothing').trigger('click');
+            }
+        }, 2000);
 
     }
 
@@ -226,9 +279,18 @@ $('.stickers_tabs a').on('click', function(e) {
     
 });
 
+$('.reset-album').on('click', function(e) {
+    e.stopPropagation();
+  
+    resetAlbum(Xchanger.albums.default);
+
+    // @TODO: this needs for page to be restarted !!!    
+});
 
 // initialize some language phrasses:
 $('.stickers-tab-all').text(Xchanger.dictionary.words.all_stickers[Xchanger.language]);
 $('.stickers-tab-missing').text(Xchanger.dictionary.words.missing_stickers[Xchanger.language]);
 $('.stickers-tab-duplicates').text(Xchanger.dictionary.words.duplicate_stickers[Xchanger.language]);
 $('.stickers-tab-found').text(Xchanger.dictionary.words.found_stickers[Xchanger.language]);
+$('.reset-album').text(Xchanger.dictionary.phrasses.reset_album[Xchanger.language]);
+
