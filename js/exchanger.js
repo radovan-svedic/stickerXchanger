@@ -80,6 +80,14 @@ Xchanger.dictionary = {
         'Exchange_now': {
             eng: 'Exchange now',
             srb: 'Размени сад'
+        },
+        'confirm_remove_from_offered': {
+            eng: 'Do you really want to remove this sticker from offered stickers\' list ?',
+            srb: 'Заиста желите да уклоните ову сличицу из списка понуђених ?'            
+        },
+        'confirm_remove_from_needed': {
+            eng: 'Do you really want to remove this sticker from needed stickers\' list ?',
+            srb: 'Заиста желите да уклоните ову сличицу из списка тражених ?'            
         }
     },
     words: {
@@ -284,18 +292,22 @@ var redrawExchanges = function() {
 
         $('.stickers-exchange-block a').on('click', function() {
             if ($(this).hasClass('stickers-offered')) {
-                // offered sticker should be removed from Exchange Pane:
-                delete Xchanger.exchanges.offered[$(this).data('pos')];
+                if (confirm(Xchanger.dictionary.phrasses.confirm_remove_from_offered[Xchanger.language])) {
+                    // offered sticker should be removed from Exchange Pane:
+                    delete Xchanger.exchanges.offered[$(this).data('pos')];
 
-                // update storage with the most recent exchanges:
-                storeExchanges(Xchanger.exchanges, 'stickerXchanger-exchanges');
+                    // update storage with the most recent exchanges:
+                    storeExchanges(Xchanger.exchanges, 'stickerXchanger-exchanges');
+                }
             }
             else if ($(this).hasClass('stickers-needed')) {
-                // offered sticker should be removed from Exchange Pane:
-                delete Xchanger.exchanges.needed[$(this).data('pos')];
+                if (confirm(Xchanger.dictionary.phrasses.confirm_remove_from_needed[Xchanger.language])) {
+                    // offered sticker should be removed from Exchange Pane:
+                    delete Xchanger.exchanges.needed[$(this).data('pos')];
 
-                // update storage with the most recent exchanges:
-                storeExchanges(Xchanger.exchanges, 'stickerXchanger-exchanges');
+                    // update storage with the most recent exchanges:
+                    storeExchanges(Xchanger.exchanges, 'stickerXchanger-exchanges');
+                }
             }
             
             redrawExchanges();
