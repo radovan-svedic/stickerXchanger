@@ -359,7 +359,7 @@ var drawStickers = function() {
         }
         
         countInfo = '';
-        if (Xchanger.stickers[i][Xchanger.stickersFields.count] > 0) {
+        if (Xchanger.stickers[i][Xchanger.stickersFields.count] > 1) {
             countInfo = '<sup>' + Xchanger.stickers[i][Xchanger.stickersFields.count] + '</sup>';
         }
 
@@ -422,7 +422,7 @@ var drawStickers = function() {
 
                         // then update sticker's view:
                         countInfo = '';
-                        if (stickerModel[Xchanger.stickersFields.count] > 0) {
+                        if (stickerModel[Xchanger.stickersFields.count] > 1) {
                             countInfo = '<sup>' + stickerModel[Xchanger.stickersFields.count] + '</sup>';
                         }                        
                         countInfo = stickerModel[Xchanger.stickersFields['label']] + countInfo;
@@ -437,7 +437,7 @@ var drawStickers = function() {
 
                         // then update sticker's view:
                         countInfo = '';
-                        if (stickerModel[Xchanger.stickersFields.count] > 0) {
+                        if (stickerModel[Xchanger.stickersFields.count] > 1) {
                             countInfo = '<sup>' + stickerModel[Xchanger.stickersFields.count] + '</sup>';
                         }                        
                         countInfo = stickerModel[Xchanger.stickersFields['label']] + countInfo;
