@@ -366,6 +366,8 @@ var drawStickers = function() {
         $('.container').append('<div id="' + Xchanger.stickers[i][Xchanger.stickersFields['label']] + '" class="sticker pointable ' + currentStickerState + '" data-pos="' + Xchanger.stickers[i][Xchanger.stickersFields.position] + '">' + Xchanger.stickers[i][Xchanger.stickersFields['label']] + countInfo + '</div>');
     }
 
+    // update stickers' count:
+    $('.stickers-current-count').text($('.sticker:visible').length);
 
     // jQuery binds:
     $('.sticker').on('click', function(){
@@ -556,6 +558,9 @@ var drawStickers = function() {
             $('.sticker-duplicate').show();        
             $('.sticker-found').show();        
         }
+
+        // update stickers' count:
+        $('.stickers-current-count').text($('.sticker:visible').length);
         
         Xchanger.utils.log(toLog);
     });
