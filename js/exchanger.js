@@ -630,6 +630,9 @@ var createStaticBinds = function() {
     $('.sticker-exchange-close').on('click', function(e) {
         e.stopPropagation();
 
+        // update storage with the most recent exchanges:
+        storeExchanges(Xchanger.exchanges, 'stickerXchanger-exchanges');
+
         $('.stickers-exchange-wrapper').slideUp();
     });
     
@@ -638,9 +641,6 @@ var createStaticBinds = function() {
 
         Xchanger.exchanges.offered = {};
         Xchanger.exchanges.needed = {};
-
-        // update storage with the most recent exchanges:
-        storeExchanges(Xchanger.exchanges, 'stickerXchanger-exchanges');
 
         $('.stickers-exchange-wrapper').slideUp();
     });
