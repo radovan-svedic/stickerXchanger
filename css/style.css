@@ -19,7 +19,7 @@
     position: relative;
 }
 
-.sticker-pointable {
+.pointable {
     cursor: pointer;    
 }
 
@@ -43,12 +43,12 @@
 
 .sticker-action {
     position: absolute;
-    z-index: 999;
+    z-index: 99999;
     left: -3px;
     top: -112px;
-    width: 55px;
-    height: 250px;
+    width: 80px;
     border: solid 1px black;
+    box-shadow: 3px 6px 7px #888;
     border-radius: 5px;
     background-color: white;
 }
@@ -63,7 +63,7 @@
     color: black;
 }
 
-.stickers_tabs a {
+.stickers-tabs a {
     border: 1px solid black;
     border-radius: 5px;
     padding: 4px;
@@ -92,7 +92,7 @@
 
 
 footer {
-    margin: 50px 0 100px;
+    margin: 50px 0 200px;
 }
 
 footer a {
@@ -108,20 +108,27 @@ footer a {
 
 
 .stickers-exchange-wrapper {
+    display: none;
+    box-shadow: 0 -1px 7px #888;
     position: fixed;
+    left: 0;
     bottom: 0;
-    width: 94%;
-    border: solid 1px red;
-    background-color: white;
+    width: 100%;
+    border-top: solid 1px #888;
+    background-color: #fef;
     z-index: 9999;
 }
 
 .sticker-exchange-title {
-    border-bottom: 1px solid black;
+    display: inline-block;
 }
 
 .stickers-exchange-block {
-    min-height: 70px;
+    border-top: 1px solid black;
+}
+
+.stickers-exchange-block a {
+    text-decoration: none;
 }
 
 .stickers-offered {

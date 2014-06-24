@@ -11,14 +11,19 @@ Xchanger.albums = {
     default: 'stickerXchanger'
 }
 
-Xchanger.offered = {};
-Xchanger.needed = {};
+Xchanger.exchanges = {};
+Xchanger.exchanges.offered = {};
+Xchanger.exchanges.needed = {};
 
 Xchanger.dictionary = {
     phrasses: {
         'failed_to_store_to_local_storage': {
             eng: 'Failed to store current sticker\'s set to device, please try with restart of software or device, there\'s a possibility that this problem may dissapear that way. Thank you!', 
             srb: 'Скуп сличица није успешно сачуван на уређају, молимо Вас да поново покушате да покренете програм или сам уређај, постоји могућност да ће на такав начин овај проблем бити елиминисан. Хвала!'
+        },
+        'failed_to_store_exchanges_to_local_storage': {
+            eng: 'Failed to store current sticker\'s exchanges to device, please try with restart of software or device, there\'s a possibility that this problem may dissapear that way. Thank you!', 
+            srb: 'Скуп сличица за замену није успешно сачуван на уређају, молимо Вас да поново покушате да покренете програм или сам уређај, постоји могућност да ће на такав начин овај проблем бити елиминисан. Хвала!'
         },
         'backup_album_text': {
             eng: 'Copy all the text from text area below and paste whereever you\'d like it to be backed up, click "Done" when you\'re done:',
@@ -31,6 +36,10 @@ Xchanger.dictionary = {
         'failed_to_get_from_local_storage': {
             eng: 'Failed to get current sticker\'s set from device, please try with restart of software or device, there\'s a possibility that this problem may dissapear that way. Thank you!', 
             srb: 'Скуп сличица није успешно преузет са уређаја, молимо Вас да поново покушате да покренете програм или сам уређај, постоји могућност да ће на такав начин овај проблем бити елиминисан. Хвала!'
+        },
+        'failed_to_get_exchanges_from_local_storage': {
+            eng: 'Failed to get current sticker\'s exchange set from device, please try with restart of software or device, there\'s a possibility that this problem may dissapear that way. Thank you!', 
+            srb: 'Скуп сличица за размену није успешно преузет са уређаја, молимо Вас да поново покушате да покренете програм или сам уређај, постоји могућност да ће на такав начин овај проблем бити елиминисан. Хвала!'
         },
         'failed_to_parse_from_local_storage': {
             eng: 'Failed to parse current sticker\'s set retreived from device, please try with restart of software or device, there\'s a possibility that this problem may dissapear that way. Thank you!', 
@@ -64,9 +73,13 @@ Xchanger.dictionary = {
             eng: 'Are you sure you want to reset this album (this operation can\'t be undone)?', 
             srb: 'Да ли сте сигурни да желите да бесповратно поништите тренутни албум?'
         },
-        'exchange_pannel': {
-            eng: 'Exchange Pannel:', 
-            srb: 'За размену:'
+        'to_exchange': {
+            eng: 'To Exchange', 
+            srb: 'За Размену'
+        },
+        'Exchange_now': {
+            eng: 'Exchange now',
+            srb: 'Размени сад'
         }
     },
     words: {
@@ -94,6 +107,34 @@ Xchanger.dictionary = {
             eng: 'cancel',
             srb: 'одустани'
         },
+        'Offer': {
+            eng: 'Offer',
+            srb: 'Нудим'
+        },
+        'Need': {
+            eng: 'Need',
+            srb: 'Тражим'
+        },
+        'Close': {
+            eng: 'Close',
+            srb: 'Затвори'
+        },
+        'Reset': {
+            eng: 'Reset',
+            srb: 'Поништи'
+        },
+        'Delete': {
+            eng: 'Delete',
+            srb: 'Обриши'
+        },
+        'Add': {
+            eng: 'Add',
+            srb: 'Додај'
+        },
+        'Remove': {
+            eng: 'Remove',
+            srb: 'Склони'
+        }
     }
 };
 
@@ -139,7 +180,7 @@ var getStoredStickersRaw = function(key) {
     var storedStickers = null;
 
     try {
-        var storedStickers = window.localStorage.getItem(key);
+        storedStickers = window.localStorage.getItem(key);
     }
     catch(e) {
         console.log('Failed to get stored stickers from localStorage with the following error message:', e.message);
@@ -154,7 +195,7 @@ var getStoredStickers = function(key) {
     var storedStickers = null;
 
     try {
-        var storedStickers = getStoredStickersRaw(key);
+        storedStickers = getStoredStickersRaw(key);
 
         if (storedStickers) {
             storedStickers = JSON.parse(storedStickers);
@@ -184,19 +225,87 @@ var loadStickers = function() {
     } 
 };
 
-var redrawExchange = function() {
+var storeExchanges = function(exchanges, key) {
+    var success;
+    try {
+        window.localStorage.setItem(key, JSON.stringify(exchanges));
+        
+        success = true;
+    }
+    catch(e) {
+        console.log('Failed to store Exchanges to localStorage with the following error message:', e.message);
+        
+        alert(Xchanger.dictionary.phrasses.failed_to_store_exchanges_to_local_storage[Xchanger.language]);
+
+        success = false;
+    }
+    
+    return success;
+};
+
+var getStoredExchanges = function(key) {
+    var storedExchanges = null;
+
+    try {
+        var tmpStoredExchanges = window.localStorage.getItem(key);
+
+        if (tmpStoredExchanges) {
+            storedExchanges = JSON.parse(tmpStoredExchanges);
+        }
+    }
+    catch(e) {
+        console.log('Failed to get stored exchanges from localStorage with the following error message:', e.message);
+        
+        alert(Xchanger.dictionary.phrasses.failed_to_get_exchanges_from_local_storage[Xchanger.language]);
+        
+        storedExchanges = null;
+    }
+    
+    return storedExchanges;
+};
+
+var redrawExchanges = function() {
+    $('.stickers-exchange-block a').off('click');
     $('.stickers-exchange-block').empty();
     
-    var i;
+    if (objlen(Xchanger.exchanges.offered) || objlen(Xchanger.exchanges.needed)) {
+        var i;
 
-    for(i in Xchanger.offered) {
-        $('.stickers-exchange-block').append('<span class="stickers-offered">' + Xchanger.offered[i][Xchanger.stickersFields.label] + '</span>');
+        for(i in Xchanger.exchanges.offered) {
+            $('.stickers-exchange-block').append('<a href="javascript:void(0);" class="stickers-offered" data-pos="' + i + '" title="' + Xchanger.dictionary.words.Delete[Xchanger.language] + '">' + Xchanger.exchanges.offered[i][Xchanger.stickersFields['label']] + '</a>');
+        }
+
+        $('.stickers-exchange-block').append('<hr />');
+
+        for(i in Xchanger.exchanges.needed) {
+            $('.stickers-exchange-block').append('<a href="javascript:void(0);" class="stickers-needed" data-pos="' + i + '" title="' + Xchanger.dictionary.words.Delete[Xchanger.language] + '">' + Xchanger.exchanges.needed[i][Xchanger.stickersFields['label']] + '</a>');
+        }
+
+
+        $('.stickers-exchange-block a').on('click', function() {
+            if ($(this).hasClass('stickers-offered')) {
+                // offered sticker should be removed from Exchange Pane:
+                delete Xchanger.exchanges.offered[$(this).data('pos')];
+
+                // update storage with the most recent exchanges:
+                storeExchanges(Xchanger.exchanges, 'stickerXchanger-exchanges');
+            }
+            else if ($(this).hasClass('stickers-needed')) {
+                // offered sticker should be removed from Exchange Pane:
+                delete Xchanger.exchanges.needed[$(this).data('pos')];
+
+                // update storage with the most recent exchanges:
+                storeExchanges(Xchanger.exchanges, 'stickerXchanger-exchanges');
+            }
+            
+            redrawExchanges();
+        });
+
+        
+        $('.stickers-exchange-wrapper').slideDown();
     }
-
-    $('.stickers-exchange-block').append('<hr />');
-
-    for(i in Xchanger.needed) {
-        $('.stickers-exchange-block').append('<span class="stickers-needed">' + Xchanger.needed[i][Xchanger.stickersFields.label] + '</span>');
+    else if ($('.stickers-exchange-wrapper:visible').length) {
+        $('.stickers-exchange-wrapper').slideUp();
     }
 };
 
@@ -207,7 +316,7 @@ var generateBrasil2014Stickers = function() {
     
     // ad descriptive sticker:
     var sticker = {};
-        sticker[Xchanger.stickersFields.label] = '00';
+        sticker[Xchanger.stickersFields['label']] = '00';
         sticker[Xchanger.stickersFields.count] = -1;
         sticker[Xchanger.stickersFields.position] = position++;        
     stickers.push(sticker);
@@ -216,7 +325,7 @@ var generateBrasil2014Stickers = function() {
     var i;
     for(i=1; i<640; i++) {
         sticker = {};
-            sticker[Xchanger.stickersFields.label] = i.toString();
+            sticker[Xchanger.stickersFields['label']] = i.toString();
             sticker[Xchanger.stickersFields.count] = -1;
             sticker[Xchanger.stickersFields.position] = position++;        
         stickers.push(sticker);
@@ -241,7 +350,7 @@ var drawStickers = function() {
             currentStickerState = 'sticker-duplicate';
         }
 
-        $('.container').append('<div id="' + Xchanger.stickers[i][Xchanger.stickersFields.label] + '" class="sticker sticker-pointable ' + currentStickerState + '" data-pos="' + Xchanger.stickers[i][Xchanger.stickersFields.position] + '">' + Xchanger.stickers[i][Xchanger.stickersFields.label] + '</div>');
+        $('.container').append('<div id="' + Xchanger.stickers[i][Xchanger.stickersFields['label']] + '" class="sticker pointable ' + currentStickerState + '" data-pos="' + Xchanger.stickers[i][Xchanger.stickersFields.position] + '">' + Xchanger.stickers[i][Xchanger.stickersFields['label']] + '</div>');
     }
 
 
@@ -250,12 +359,21 @@ var drawStickers = function() {
         var actionItem = $(this);
         
         if (!actionItem.find('.sticker-action').length) {
-            // actionItem.append('<div class="sticker-action"><div class="sticker-action-item sticker-pointable sticker-remove-one">-1</div><div class="sticker-action-item sticker-pointable sticker-do-nothing">X</div><div class="sticker-action-item sticker-pointable sticker-add-one">+1</div></div>');
+            var offered_one_markup = '';
+            if (actionItem.hasClass('sticker-duplicate')) {
+                offered_one_markup = '<div class="sticker-action-item pointable sticker-offered-one">' + Xchanger.dictionary.words.Offer[Xchanger.language] + '</div>';
+            }
 
-            actionItem.append('<div class="sticker-action"><div class="sticker-action-item sticker-pointable sticker-offered-one">Offer</div><div class="sticker-action-item sticker-pointable sticker-remove-one">-1</div><div class="sticker-action-item sticker-pointable sticker-do-nothing">X</div><div class="sticker-action-item sticker-pointable sticker-add-one">+1</div><div class="sticker-action-item sticker-pointable sticker-needed-one">Need</div></div>');
+            var needed_one_markup = '';
+            if (actionItem.hasClass('sticker-missing')) {
+                needed_one_markup = '<div class="sticker-action-item pointable sticker-needed-one">' + Xchanger.dictionary.words.Need[Xchanger.language] + '</div>';
+            }
 
 
-            $(this).removeClass('sticker-pointable');
+            actionItem.append('<div class="sticker-action">' + offered_one_markup + '<div class="sticker-action-item pointable sticker-remove-one">' + Xchanger.dictionary.words.Remove[Xchanger.language] + '</div><div class="sticker-action-item pointable sticker-do-nothing">' + Xchanger.dictionary.words.cancel[Xchanger.language] + '</div><div class="sticker-action-item pointable sticker-add-one">' + Xchanger.dictionary.words.Add[Xchanger.language] + '</div>' + needed_one_markup + '</div>');
+
+
+            $(this).removeClass('pointable');
 
 
 
@@ -299,26 +417,32 @@ var drawStickers = function() {
                         console.log('... offer one sticker');
 
                         // mark sticker as offered one (if not already marked as such):
-                        if (!Xchanger.offered[stickerModel[Xchanger.stickersFields.position]]) {
-                            Xchanger.offered[stickerModel[Xchanger.stickersFields.position]] = stickerModel;
+                        if (!Xchanger.exchanges.offered[stickerModel[Xchanger.stickersFields.position]]) {
+                            Xchanger.exchanges.offered[stickerModel[Xchanger.stickersFields.position]] = stickerModel;
                         }
                         
-                        redrawExchange();
+                        // update storage with the most recent exchanges:
+                        storeExchanges(Xchanger.exchanges, 'stickerXchanger-exchanges');
+
+                        redrawExchanges();
                     }
                     else if ($(this).hasClass('sticker-needed-one')) {
                         console.log('... need this sticker');
 
                         // mark sticker as needed one (if not already marked as such):
-                        if (!Xchanger.needed[stickerModel[Xchanger.stickersFields.position]]) {
-                            Xchanger.needed[stickerModel[Xchanger.stickersFields.position]] = stickerModel;
+                        if (!Xchanger.exchanges.needed[stickerModel[Xchanger.stickersFields.position]]) {
+                            Xchanger.exchanges.needed[stickerModel[Xchanger.stickersFields.position]] = stickerModel;
                         }
 
-                        redrawExchange();
+                        // update storage with the most recent exchanges:
+                        storeExchanges(Xchanger.exchanges, 'stickerXchanger-exchanges');
+
+                        redrawExchanges();
                     }
                     
                     // update storage with the most recent data:
                     storeStickers(Xchanger.stickers, Xchanger.albums.default);
-
+                    
                     // ... then check current sticker's state (count), after previous action:
                     // add/remove appropriate classes:
                     if (stickerModel[Xchanger.stickersFields.count] > 0) {
@@ -326,7 +450,7 @@ var drawStickers = function() {
                         actionItem.removeClass('sticker-missing sticker-found');             
                     }
                     else if (stickerModel[Xchanger.stickersFields.count] === 0) {
-                        actionItem.addClass('sticker-found');                
+                        actionItem.addClass('sticker-found');
                         actionItem.removeClass('sticker-missing sticker-duplicate');             
                     }
                     else {
@@ -336,7 +460,7 @@ var drawStickers = function() {
                 }
 
                 // add back pointer style to .sticker:
-                actionItem.addClass('sticker-pointable');
+                actionItem.addClass('pointable');
 
                 // first remove event handler since it's parent container is about to be removed:
                 $(this).off('click');
@@ -346,17 +470,17 @@ var drawStickers = function() {
             });
 
 
-            // but make it dissapear in a two seconds (only if it's visible):
+            // but make it dissapear in a three seconds (only if it's visible):
             setTimeout(function(){
                 if (actionItem.find('.sticker-action .sticker-action-item.sticker-do-nothing:visible').length) {
                     actionItem.find('.sticker-action .sticker-action-item.sticker-do-nothing').trigger('click');
                 }
-            }, 2000);
+            }, 3000);
         }
 
     });
 
-    $('.stickers_tabs a').on('click', function(e) {
+    $('.stickers-tabs a').on('click', function(e) {
         console.log('Sticker tab filter has been chosen:');
 
         // stop propagating this click to parent containers:
@@ -405,8 +529,6 @@ var createStaticBinds = function() {
         $('textarea[name=backup-restore-album]').attr('readonly', true);
         $('.backup-restore-album-cancel').hide();
         $('.backup-restore-wrapper').slideDown();
-        
-        // $('footer').prepend('<div class="backup-album-wrapper"><label class="backup-album-label">' + Xchanger.dictionary.phrasses.backup_album_text[Xchanger.language] + '</label><textarea name="backup-album">' + getStoredStickersRaw(Xchanger.albums.default) + '</textarea><input id="backup_album_done" type="button" value="' + Xchanger.dictionary.words.Done[Xchanger.language] + '" /></div>');
     });
 
     $('.restore-album').on('click', function(e) {
@@ -461,11 +583,103 @@ var createStaticBinds = function() {
       
         resetAlbum(Xchanger.albums.default);
     });
+
+    $('.sticker-exchange-close').on('click', function(e) {
+        e.stopPropagation();
+
+        $('.stickers-exchange-wrapper').slideUp();
+    });
+    
+    $('.sticker-exchange-reset').on('click', function(e) {
+        e.stopPropagation();
+
+        Xchanger.exchanges.offered = {};
+        Xchanger.exchanges.needed = {};
+
+        // update storage with the most recent exchanges:
+        storeExchanges(Xchanger.exchanges, 'stickerXchanger-exchanges');
+
+        $('.stickers-exchange-wrapper').slideUp();
+    });
+
+    $('.to-exchange-section').on('click', function(e) {
+        e.stopPropagation();
+       
+        if ($('.stickers-exchange-wrapper:visible').length) {
+            $('.stickers-exchange-wrapper').slideUp(); 
+        }
+        else {
+            $('.stickers-exchange-wrapper').slideDown(); 
+        }
+    });
+    
+    $('.sticker-exchange-exchange').on('click', function(e) {
+        e.stopPropagation();
+        
+        // iterate over exchange set (offered and needed) and apply to current stickers' set:
+        var i;
+
+        for(i in Xchanger.exchanges.offered) {
+            Xchanger.stickers[Xchanger.exchanges.offered[i][Xchanger.stickersFields.position]][Xchanger.stickersFields.count]--;
+        }
+
+        for(i in Xchanger.exchanges.needed) {
+            Xchanger.stickers[Xchanger.exchanges.needed[i][Xchanger.stickersFields.position]][Xchanger.stickersFields.count]++;
+        }
+
+        // ok so now store sticker's model to storage since it's updated with suggested exchanges:
+        storeStickers(Xchanger.stickers, Xchanger.albums.default);
+
+        // redraw stickers:
+        drawStickers();
+        
+        // empty offered and needed since it's transferred to stickers' model:
+        Xchanger.exchanges.offered = {};
+        Xchanger.exchanges.needed = {};
+
+        // update storage with the most recent exchanges:
+        storeExchanges(Xchanger.exchanges, 'stickerXchanger-exchanges');
+        
+        // and finally redray exchanges (empty, though):
+        redrawExchanges();
+    });
 };
 
 
 
-// set the stage up:
+
+
+// custom functions:
+var objlen = function(obj) {
+    var len = false;
+    
+    if (typeof obj === 'object') {
+        len = 0;
+
+        for (var key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                len++;
+            }
+        }
+    }
+    
+    return len;
+}
+
+
+
+
+
+// prepare exchange data:
+var storedExchanges = getStoredExchanges('stickerXchanger-exchanges');
+if (storedExchanges) {
+    Xchanger.exchanges = storedExchanges;
+}
+
+// set up the stage:
+if (objlen(Xchanger.exchanges.offered) || objlen(Xchanger.exchanges.needed)) {
+    redrawExchanges();
+}
 loadStickers();
 drawStickers();
 createStaticBinds();
@@ -481,4 +695,9 @@ $('.restore-album').text(Xchanger.dictionary.phrasses.restore_album_from_backup[
 $('.reset-album').text(Xchanger.dictionary.phrasses.reset_album[Xchanger.language]);
 $('.backup-restore-album-done').attr('value', Xchanger.dictionary.words.Done[Xchanger.language]);
 $('.backup-restore-album-cancel').attr('value', Xchanger.dictionary.words.cancel[Xchanger.language]);
-$('.sticker-exchange-title').text(Xchanger.dictionary.phrasses.exchange_pannel[Xchanger.language]);
+$('.to-exchange-section').text(Xchanger.dictionary.phrasses.to_exchange[Xchanger.language]);
+$('.sticker-exchange-title').text(Xchanger.dictionary.phrasses.to_exchange[Xchanger.language]);
+$('.sticker-exchange-close').text(Xchanger.dictionary.words.Close[Xchanger.language]);
+$('.sticker-exchange-reset').text(Xchanger.dictionary.words['Reset'][Xchanger.language]);
+$('.sticker-exchange-exchange').text(Xchanger.dictionary.phrasses.Exchange_now[Xchanger.language]);
+
