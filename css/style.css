@@ -145,8 +145,7 @@ footer a {
     background-color: blue;
     border: 1px solid black;
     border-radius: 3px;
-    margin: 3px;
-    padding: 3px;
+    margin: 1px;
     min-width: 25px;
     text-align: center;
 }
