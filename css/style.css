@@ -41,6 +41,10 @@
     border: solid 1px blue;
     color: yellow;    
 }
+.sticker-duplicate.sticker-duplicate-multiple {
+    color: red;
+}
+
 
 .sticker-action {
     position: absolute;

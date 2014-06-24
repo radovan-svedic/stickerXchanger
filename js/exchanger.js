@@ -343,6 +343,7 @@ var drawStickers = function() {
     var i,
         countInfo,
         currentStickerState;
+
     for(i in Xchanger.stickers) {
         currentStickerState = 'sticker-missing';
         if (Xchanger.stickers[i][Xchanger.stickersFields.count] === 0) {
@@ -350,6 +351,11 @@ var drawStickers = function() {
         }
         else if (Xchanger.stickers[i][Xchanger.stickersFields.count] > 0) {
             currentStickerState = 'sticker-duplicate';
+            
+            // check for multiple duplicates:
+            if (Xchanger.stickers[i][Xchanger.stickersFields.count] > 1) {
+                currentStickerState += ' sticker-duplicate-multiple';
+            }
         }
         
         countInfo = '';
@@ -472,6 +478,15 @@ var drawStickers = function() {
                     // add/remove appropriate classes:
                     if (stickerModel[Xchanger.stickersFields.count] > 0) {
                         actionItem.addClass('sticker-duplicate');
+
+                        // check for multiple duplicates:
+                        if (stickerModel[Xchanger.stickersFields.count] > 1) {
+                            actionItem.addClass('sticker-duplicate-multiple');
+                        }
+                        else {
+                            actionItem.removeClass('sticker-duplicate-multiple');                            
+                        }
+
                         actionItem.removeClass('sticker-missing sticker-found');             
                     }
                     else if (stickerModel[Xchanger.stickersFields.count] === 0) {
