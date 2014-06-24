@@ -151,7 +151,7 @@ var resetAlbum = function(key) {
             drawStickers();
         }
         catch(e) {
-            console.log('Failed to delete item from localStorage with the following error message:', e.message);
+            Xchanger.utils.log('Failed to delete item from localStorage with the following error message:', e.message);
             
             alert(Xchanger.dictionary.phrasses.failed_to_delete_item_from_local_storage[Xchanger.language]);
         }        
@@ -166,7 +166,7 @@ var storeStickers = function(stickers, key) {
         success = true;
     }
     catch(e) {
-        console.log('Failed to store to localStorage with the following error message:', e.message);
+        Xchanger.utils.log('Failed to store to localStorage with the following error message:', e.message);
         
         alert(Xchanger.dictionary.phrasses.failed_to_store_to_local_storage[Xchanger.language]);
 
@@ -183,7 +183,7 @@ var getStoredStickersRaw = function(key) {
         storedStickers = window.localStorage.getItem(key);
     }
     catch(e) {
-        console.log('Failed to get stored stickers from localStorage with the following error message:', e.message);
+        Xchanger.utils.log('Failed to get stored stickers from localStorage with the following error message:', e.message);
         
         alert(Xchanger.dictionary.phrasses.failed_to_get_from_local_storage[Xchanger.language]);
     }
@@ -202,7 +202,7 @@ var getStoredStickers = function(key) {
         }
     }
     catch(e) {
-        console.log('Failed to parse stored stickers from localStorage with the following error message:', e.message);
+        Xchanger.utils.log('Failed to parse stored stickers from localStorage with the following error message:', e.message);
         
         alert(Xchanger.dictionary.phrasses.failed_to_parse_from_local_storage[Xchanger.language]);
     }
@@ -233,7 +233,7 @@ var storeExchanges = function(exchanges, key) {
         success = true;
     }
     catch(e) {
-        console.log('Failed to store Exchanges to localStorage with the following error message:', e.message);
+        Xchanger.utils.log('Failed to store Exchanges to localStorage with the following error message:', e.message);
         
         alert(Xchanger.dictionary.phrasses.failed_to_store_exchanges_to_local_storage[Xchanger.language]);
 
@@ -254,7 +254,7 @@ var getStoredExchanges = function(key) {
         }
     }
     catch(e) {
-        console.log('Failed to get stored exchanges from localStorage with the following error message:', e.message);
+        Xchanger.utils.log('Failed to get stored exchanges from localStorage with the following error message:', e.message);
         
         alert(Xchanger.dictionary.phrasses.failed_to_get_exchanges_from_local_storage[Xchanger.language]);
         
@@ -268,7 +268,7 @@ var redrawExchanges = function() {
     $('.stickers-exchange-block a').off('click');
     $('.stickers-exchange-block').empty();
     
-    if (objlen(Xchanger.exchanges.offered) || objlen(Xchanger.exchanges.needed)) {
+    if (Xchanger.utils.objlen(Xchanger.exchanges.offered) || Xchanger.utils.objlen(Xchanger.exchanges.needed)) {
         var i;
 
         for(i in Xchanger.exchanges.offered) {
@@ -340,17 +340,24 @@ var drawStickers = function() {
     $('.sticker-action-item').off('click');
     $('.container').empty();
 
-    var i;
+    var i,
+        countInfo,
+        currentStickerState;
     for(i in Xchanger.stickers) {
-        var currentStickerState = 'sticker-missing';
+        currentStickerState = 'sticker-missing';
         if (Xchanger.stickers[i][Xchanger.stickersFields.count] === 0) {
             currentStickerState = 'sticker-found';
         }
         else if (Xchanger.stickers[i][Xchanger.stickersFields.count] > 0) {
             currentStickerState = 'sticker-duplicate';
         }
+        
+        countInfo = '';
+        if (Xchanger.stickers[i][Xchanger.stickersFields.count] > 0) {
+            countInfo = '<sup>' + Xchanger.stickers[i][Xchanger.stickersFields.count] + '</sup>';
+        }
 
-        $('.container').append('<div id="' + Xchanger.stickers[i][Xchanger.stickersFields['label']] + '" class="sticker pointable ' + currentStickerState + '" data-pos="' + Xchanger.stickers[i][Xchanger.stickersFields.position] + '">' + Xchanger.stickers[i][Xchanger.stickersFields['label']] + '</div>');
+        $('.container').append('<div id="' + Xchanger.stickers[i][Xchanger.stickersFields['label']] + '" class="sticker pointable ' + currentStickerState + '" data-pos="' + Xchanger.stickers[i][Xchanger.stickersFields.position] + '">' + Xchanger.stickers[i][Xchanger.stickersFields['label']] + countInfo + '</div>');
     }
 
 
@@ -378,7 +385,7 @@ var drawStickers = function() {
 
 
             actionItem.find('.sticker-action .sticker-action-item').on('click', function(e) {
-                console.log('Sticker action has been chosen:');
+                var toLog = 'Sticker action has been chosen: ';
 
                 // stop propagating this click to parent containers:
                 e.stopPropagation();
@@ -388,7 +395,7 @@ var drawStickers = function() {
                     stickerPos = parseInt(actionItem.data('pos'));
                 }
                 catch (e) {
-                    console.log('Failed to get current sticker\'s position:', e.message);
+                    Xchanger.utils.log('Failed to get current sticker\'s position:', e.message);
                     stickerPos = null;
                 }
                 if (typeof stickerPos === 'number') {
@@ -396,25 +403,43 @@ var drawStickers = function() {
 
                     // figure out exact action that has been taken:
                     if ($(this).hasClass('sticker-do-nothing')) {
-                        console.log('... no action');
+                        toLog += '... no action';
                     }
                     else if ($(this).hasClass('sticker-remove-one')) {
-                        console.log('... remove one sticker');
+                        toLog += '... remove one sticker (' + stickerModel[Xchanger.stickersFields['label']] + ')';
                         
                         // reduce current sticker's count by 1
                         // but make sure it's never less than -1
                         if (stickerModel[Xchanger.stickersFields.count] > -1) {
                             stickerModel[Xchanger.stickersFields.count] -= 1;
                         }
+
+                        // then update sticker's view:
+                        countInfo = '';
+                        if (stickerModel[Xchanger.stickersFields.count] > 0) {
+                            countInfo = '<sup>' + stickerModel[Xchanger.stickersFields.count] + '</sup>';
+                        }                        
+                        countInfo = stickerModel[Xchanger.stickersFields['label']] + countInfo;
+
+                        actionItem.html(countInfo);
                     }
                     else if ($(this).hasClass('sticker-add-one')) {
-                        console.log('... add one sticker');
+                        toLog += '... add one sticker (' + stickerModel[Xchanger.stickersFields['label']] + ')';
 
                         // increment current sticker's count by 1
-                        stickerModel[Xchanger.stickersFields.count] += 1; 
+                        stickerModel[Xchanger.stickersFields.count] += 1;
+
+                        // then update sticker's view:
+                        countInfo = '';
+                        if (stickerModel[Xchanger.stickersFields.count] > 0) {
+                            countInfo = '<sup>' + stickerModel[Xchanger.stickersFields.count] + '</sup>';
+                        }                        
+                        countInfo = stickerModel[Xchanger.stickersFields['label']] + countInfo;
+
+                        actionItem.html(countInfo);
                     }
                     else if ($(this).hasClass('sticker-offered-one')) {
-                        console.log('... offer one sticker');
+                        toLog += '... offer one sticker (' + stickerModel[Xchanger.stickersFields['label']] + ')';
 
                         // mark sticker as offered one (if not already marked as such):
                         if (!Xchanger.exchanges.offered[stickerModel[Xchanger.stickersFields.position]]) {
@@ -427,7 +452,7 @@ var drawStickers = function() {
                         redrawExchanges();
                     }
                     else if ($(this).hasClass('sticker-needed-one')) {
-                        console.log('... need this sticker');
+                        toLog += '... need one sticker (' + stickerModel[Xchanger.stickersFields['label']] + ')';
 
                         // mark sticker as needed one (if not already marked as such):
                         if (!Xchanger.exchanges.needed[stickerModel[Xchanger.stickersFields.position]]) {
@@ -458,6 +483,8 @@ var drawStickers = function() {
                         actionItem.removeClass('sticker-duplicate sticker-found');             
                     }
                 }
+                
+                Xchanger.utils.log(toLog);
 
                 // add back pointer style to .sticker:
                 actionItem.addClass('pointable');
@@ -481,7 +508,7 @@ var drawStickers = function() {
     });
 
     $('.stickers-tabs a').on('click', function(e) {
-        console.log('Sticker tab filter has been chosen:');
+        var toLog = 'Sticker tab filter has been chosen: ';
 
         // stop propagating this click to parent containers:
         e.stopPropagation();
@@ -491,30 +518,31 @@ var drawStickers = function() {
 
         // figure out exact tab filter that was selected:
         if ($(this).hasClass('stickers-tab-all')) {
-            console.log('... all stickers');
+            toLog += '... all stickers';
             
             $('.sticker').show();
         }
         else if ($(this).hasClass('stickers-tab-missing')) {
-            console.log('... missing stickers');
+            toLog += '... missing stickers';
 
             $('.sticker').hide();
             $('.sticker-missing').show();        
         }
         else if ($(this).hasClass('stickers-tab-duplicates')) {
-            console.log('... duplicate stickers');
+            toLog += '... duplicate stickers';
 
             $('.sticker').hide();
             $('.sticker-duplicate').show();        
         }
         else if ($(this).hasClass('stickers-tab-found')) {
-            console.log('... found stickers');
+            toLog += '... found stickers';
 
             $('.sticker').hide();
             $('.sticker-duplicate').show();        
             $('.sticker-found').show();        
         }
         
+        Xchanger.utils.log(toLog);
     });
 };
 
@@ -569,7 +597,7 @@ var createStaticBinds = function() {
                 }
             }
             catch(e) {
-                console.log('Failed to parse/store backup data to localStorage with the following error message:', e.message);
+                Xchanger.utils.log('Failed to parse/store backup data to localStorage with the following error message:', e.message);
                 
                 alert(Xchanger.dictionary.phrasses.failed_to_parse_store_backup_data_to_local_storage[Xchanger.language]);
             }
@@ -615,16 +643,27 @@ var createStaticBinds = function() {
     
     $('.sticker-exchange-exchange').on('click', function(e) {
         e.stopPropagation();
-        
+
+        Xchanger.utils.log('Exchange has just began:', 'Offered: ', Xchanger.exchanges.offered, ' Needed: ', Xchanger.exchanges.needed);
+                
         // iterate over exchange set (offered and needed) and apply to current stickers' set:
-        var i;
+        var i,
+            fromCurrentStickersSet;
 
         for(i in Xchanger.exchanges.offered) {
-            Xchanger.stickers[Xchanger.exchanges.offered[i][Xchanger.stickersFields.position]][Xchanger.stickersFields.count]--;
+            fromCurrentStickersSet = Xchanger.stickers[Xchanger.exchanges.offered[i][Xchanger.stickersFields.position]];
+                Xchanger.utils.log('Existing sticker was offered:', fromCurrentStickersSet);
+            
+            fromCurrentStickersSet[Xchanger.stickersFields.count]--;
+                Xchanger.utils.log('Existing sticker status after offer accepted:', fromCurrentStickersSet);
         }
 
         for(i in Xchanger.exchanges.needed) {
-            Xchanger.stickers[Xchanger.exchanges.needed[i][Xchanger.stickersFields.position]][Xchanger.stickersFields.count]++;
+            fromCurrentStickersSet = Xchanger.stickers[Xchanger.exchanges.needed[i][Xchanger.stickersFields.position]];
+                Xchanger.utils.log('Existing sticker was needed:', fromCurrentStickersSet);
+
+            fromCurrentStickersSet[Xchanger.stickersFields.count]++;
+                Xchanger.utils.log('Existing sticker status after needed one was taken:', fromCurrentStickersSet);
         }
 
         // ok so now store sticker's model to storage since it's updated with suggested exchanges:
@@ -643,6 +682,20 @@ var createStaticBinds = function() {
         // and finally redray exchanges (empty, though):
         redrawExchanges();
     });
+
+    $('.stickers-debug-pannel-label-close').on('click', function(e) {
+        e.stopPropagation();
+        
+        $('.stickers-debug-pannel').slideUp('fast', function() {
+            $('body').css('margin-top', 0);
+        });
+    });
+
+    $('.stickers-debug-pannel-label-clear').on('click', function(e) {
+        e.stopPropagation();
+        
+        $('.stickers-debug-area').empty();
+    });
 };
 
 
@@ -650,7 +703,9 @@ var createStaticBinds = function() {
 
 
 // custom functions:
-var objlen = function(obj) {
+Xchanger.utils = {};
+
+Xchanger.utils.objlen = function(obj) {
     var len = false;
     
     if (typeof obj === 'object') {
@@ -666,6 +721,39 @@ var objlen = function(obj) {
     return len;
 }
 
+Xchanger.utils.log = function() {
+
+    function stringifyConsoleArguments(args) {
+        var stringifiedArgs = [];
+
+        for(var i in args) {
+            stringifiedArgs.push(typeof args[i] === 'object' ? JSON.stringify(args[i]) : args[i].toString());
+        }
+
+        return stringifiedArgs.join(', ');
+    }
+
+    var toLog = stringifyConsoleArguments(arguments);
+
+    if (toLog && document.location.href.match(/(\?|\&)jsdebug/)) {
+        // apppend new line to debug log entry:
+        toLog += '<br />';
+        
+        // show debug pane if it's not already displayed:
+        if (!$('.stickers-debug-pannel:visible').length) {
+            $('.stickers-debug-pannel').slideDown('fast', function() {
+                $('body').css('margin-top', $('.stickers-debug-pannel').height() + 20);
+            });
+        }
+
+        $('.stickers-debug-area').append(toLog);
+
+        if (typeof window.console !== 'undefined' && typeof window.console.log === 'function') {
+            console.log.apply(null, arguments);
+        }
+    }
+};
+
 
 
 
@@ -677,7 +765,7 @@ if (storedExchanges) {
 }
 
 // set up the stage:
-if (objlen(Xchanger.exchanges.offered) || objlen(Xchanger.exchanges.needed)) {
+if (Xchanger.utils.objlen(Xchanger.exchanges.offered) || Xchanger.utils.objlen(Xchanger.exchanges.needed)) {
     redrawExchanges();
 }
 loadStickers();

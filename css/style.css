@@ -9,7 +9,7 @@
 }
 
 .sticker {
-    float: left;
+    display: inline-block;
     width: 50px;
     border-radius: 5px;
     text-align: center;
@@ -46,7 +46,7 @@
     z-index: 99999;
     left: -3px;
     top: -112px;
-    width: 80px;
+    width: 90px;
     border: solid 1px black;
     box-shadow: 3px 6px 7px #888;
     border-radius: 5px;
@@ -153,4 +153,43 @@ footer a {
     padding: 3px;
     min-width: 25px;
     text-align: center;
+}
+
+
+.stickers-debug-pannel {
+    display: none;
+    background-color: white;
+    position: fixed;
+    top: 0;
+    left: 0;
+    overflow: auto;
+    width: 100%;
+    height: 100px;
+    border-bottom: solid 1px black;
+    z-index: 9999;
+}
+
+.stickers-debug-area {
+    padding-top: 18px;
+}
+
+.stickers-debug-pannel-label-clear,
+.stickers-debug-pannel-label-close {
+    background-color: white;
+    border: 1px solid black;
+    position: fixed;
+    top: 0;
+    padding: 0 5px;
+}
+
+.stickers-debug-pannel-label-close {
+    right: 0;
+}
+.stickers-debug-pannel-label-clear {
+    right: 100px;
+}
+
+a.stickers-debug-pannel-label-clear,
+a.stickers-debug-pannel-label-close {
+    text-decoration: none;
 }
