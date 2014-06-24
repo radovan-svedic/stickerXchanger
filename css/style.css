@@ -124,7 +124,8 @@ footer a {
     z-index: 9999;
 }
 
-.sticker-exchange-title {
+.sticker-exchange-title,
+.sticker-exchange-offered-needed {
     display: inline-block;
 }
 

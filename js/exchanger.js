@@ -301,7 +301,9 @@ var redrawExchanges = function() {
             redrawExchanges();
         });
 
-        
+        // update offered/needed count:
+        $('.sticker-exchange-offered-needed').text($('.stickers-offered').length + ' / ' + $('.stickers-needed').length);
+
         $('.stickers-exchange-wrapper').slideDown();
     }
     else if ($('.stickers-exchange-wrapper:visible').length) {
